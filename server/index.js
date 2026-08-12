@@ -1,5 +1,6 @@
 import express from 'express';
-import clientsRouter from './routes/clients.js';
+import createClientsRouter from './routes/clients.js';
+import { connectToDatabase } from './db.js';
 
 const app = express();
 const PORT = 3000;
@@ -10,7 +11,11 @@ app.get('/', (req, res) => {
   res.send('FitTrack backend radi!');
 });
 
-app.use('/clients', clientsRouter);
+// Spajanje na MongoDB
+const db = await connectToDatabase();
+
+// Dodavanje clients routera
+app.use('/clients', createClientsRouter(db));
 
 app.listen(PORT, () => {
   console.log(`FitTrack server radi na http://localhost:${PORT}`);
