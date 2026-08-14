@@ -53,7 +53,7 @@ export default function createClientsRouter(db) {
   });
 
   // dodavanje novog klijenta
-  router.post('/', async (req, res) => {
+  router.post('/:id', async (req, res) => {
     const {
       firstName,
       lastName,
