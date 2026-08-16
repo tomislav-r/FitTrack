@@ -1,5 +1,6 @@
 import express from 'express';
 import { ObjectId } from 'mongodb';
+import { body, validationResult } from 'express-validator';
 
 export default function createClientsRouter(db) {
   const router = express.Router();
@@ -53,7 +54,43 @@ export default function createClientsRouter(db) {
   });
 
   // dodavanje novog klijenta
-  router.post('/:id', async (req, res) => {
+  router.post(
+  '/',
+  [
+    body('firstName')
+      .notEmpty()
+      .withMessage('Ime je obavezno.'),
+
+    body('lastName')
+      .notEmpty()
+      .withMessage('Prezime je obavezno.'),
+
+    body('email')
+      .notEmpty()
+      .withMessage('Email je obavezan.')
+      .isEmail()
+      .withMessage('Email nije ispravnog formata.'),
+
+    body('height')
+      .optional()
+      .isNumeric()
+      .withMessage('Visina mora biti broj.'),
+
+    body('targetWeight')
+      .optional()
+      .isNumeric()
+      .withMessage('Ciljana težina mora biti broj.')
+  ],
+  async (req, res) => {
+
+    const errors = validationResult(req);
+
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        errors: errors.array()
+      });
+    }
+
     const {
       firstName,
       lastName,
@@ -62,12 +99,6 @@ export default function createClientsRouter(db) {
       targetWeight,
       goal
     } = req.body;
-
-    if (!firstName || !lastName || !email) {
-      return res.status(400).json({
-        message: 'Ime, prezime i email su obavezni.'
-      });
-    }
 
     const newClient = {
       firstName,
