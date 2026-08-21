@@ -4,10 +4,12 @@ import createProgressRouter from './routes/progress.js';
 import { connectToDatabase } from './db.js';
 import createExerciseRouter from './routes/exercises.js';
 import createCaloriesRouter from './routes/calories.js';
+import cors from 'cors';
 
 const app = express();
 const PORT = 3000;
 
+app.use(cors());
 app.use(express.json());
 
 app.get('/', (req, res) => {

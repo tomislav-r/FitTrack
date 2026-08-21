@@ -1,5 +1,6 @@
 import express from 'express';
 import { ObjectId } from 'mongodb';
+import { body, validationResult } from 'express-validator';
 
 export default function createCaloriesRouter(db) {
   const router = express.Router();
@@ -8,91 +9,112 @@ export default function createCaloriesRouter(db) {
   const clientsCollection = db.collection('clients');
 
   // Dodavanje kalorijskog zapisa za određenog klijenta
-  router.post('/:clientId', async (req, res) => {
-    const clientId = req.params.clientId;
+  router.post(
+    '/:clientId',
+    [
+      body('date')
+        .notEmpty()
+        .withMessage('Datum je obavezan.')
+        .isISO8601()
+        .withMessage('Datum mora biti ispravnog formata.'),
 
-    if (!ObjectId.isValid(clientId)) {
-      return res.status(400).json({
-        message: 'Neispravan ID klijenta.'
-      });
-    }
+      body('calorieTarget')
+        .notEmpty()
+        .withMessage('Kalorijski cilj je obavezan.')
+        .isFloat({ gt: 0 })
+        .withMessage('Kalorijski cilj mora biti broj veći od 0.'),
 
-    const {
-      date,
-      calorieTarget,
-      caloriesConsumed,
-      notes
-    } = req.body;
+      body('caloriesConsumed')
+        .notEmpty()
+        .withMessage('Unesene kalorije su obavezne.')
+        .isFloat({ min: 0 })
+        .withMessage('Unesene kalorije moraju biti broj jednak ili veći od 0.')
+    ],
 
-    if (
-      !date ||
-      calorieTarget === undefined ||
-      caloriesConsumed === undefined
-    ) {
-      return res.status(400).json({
-        message: 'Datum, kalorijski cilj i unesene kalorije su obavezni.'
-      });
-    }
+    async (req, res) => {
 
-    if (calorieTarget <= 0 || caloriesConsumed < 0) {
-      return res.status(400).json({
-        message: 'Kalorijski cilj mora biti veći od 0, a unesene kalorije ne mogu biti negativne.'
-      });
-    }
+      const errors = validationResult(req);
 
-    try {
-      const client = await clientsCollection.findOne({
-        _id: new ObjectId(clientId)
-      });
-
-      if (!client) {
-        return res.status(404).json({
-          message: 'Klijent nije pronađen.'
+      if (!errors.isEmpty()) {
+        return res.status(400).json({
+          errors: errors.array()
         });
       }
 
-      const difference = Math.abs(caloriesConsumed - calorieTarget);
+      const clientId = req.params.clientId;
 
-      const deviationPercentage = Number(
-        ((difference / calorieTarget) * 100).toFixed(2)
-      );
-
-      let rating;
-
-      if (deviationPercentage <= 10) {
-        rating = 'Dobar unos';
-      } else if (deviationPercentage <= 20) {
-        rating = 'Prosječan unos';
-      } else {
-        rating = 'Loš unos';
+      if (!ObjectId.isValid(clientId)) {
+        return res.status(400).json({
+          message: 'Neispravan ID klijenta.'
+        });
       }
 
-      const newCaloriesEntry = {
-        clientId: new ObjectId(clientId),
-        date: new Date(date),
+      const {
+        date,
         calorieTarget,
         caloriesConsumed,
-        deviationPercentage,
-        rating,
-        notes,
-        createdAt: new Date()
-      };
+        notes
+      } = req.body;
 
-      const result = await caloriesCollection.insertOne(newCaloriesEntry);
+      try {
+        const client = await clientsCollection.findOne({
+          _id: new ObjectId(clientId)
+        });
 
-      res.status(201).json({
-        _id: result.insertedId,
-        ...newCaloriesEntry
-      });
-    } catch (error) {
-      console.error(error);
+        if (!client) {
+          return res.status(404).json({
+            message: 'Klijent nije pronađen.'
+          });
+        }
 
-      res.status(500).json({
-        message: 'Greška prilikom dodavanja kalorijskog zapisa.'
-      });
+        const difference = Math.abs(
+          caloriesConsumed - calorieTarget
+        );
+
+        const deviationPercentage = Number(
+          ((difference / calorieTarget) * 100).toFixed(2)
+        );
+
+        let rating;
+
+        if (deviationPercentage <= 10) {
+          rating = 'Dobar unos';
+        } else if (deviationPercentage <= 20) {
+          rating = 'Prosječan unos';
+        } else {
+          rating = 'Loš unos';
+        }
+
+        const newCaloriesEntry = {
+          clientId: new ObjectId(clientId),
+          date: new Date(date),
+          calorieTarget,
+          caloriesConsumed,
+          deviationPercentage,
+          rating,
+          notes,
+          createdAt: new Date()
+        };
+
+        const result = await caloriesCollection.insertOne(
+          newCaloriesEntry
+        );
+
+        res.status(201).json({
+          _id: result.insertedId,
+          ...newCaloriesEntry
+        });
+
+      } catch (error) {
+        console.error(error);
+
+        res.status(500).json({
+          message: 'Greška prilikom dodavanja kalorijskog zapisa.'
+        });
+      }
     }
-  });
-
+  );
+  
   // Dohvaćanje svih kalorijskih zapisa određenog klijenta
   router.get('/:clientId', async (req, res) => {
     const clientId = req.params.clientId;
