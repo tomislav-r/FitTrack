@@ -6,6 +6,9 @@ export default function createClientsRouter(db) {
   const router = express.Router();
 
   const clientsCollection = db.collection('clients');
+  const progressCollection = db.collection('progress');
+  const exercisesCollection = db.collection('exercises');
+  const caloriesCollection = db.collection('calories');
 
   // dohvaćanje svih klijenata
   router.get('/', async (req, res) => {
@@ -196,19 +199,34 @@ export default function createClientsRouter(db) {
     }
 
     try {
+      const clientObjectId = new ObjectId(id);
+
       const result = await clientsCollection.deleteOne({
-        _id: new ObjectId(id)
+        _id: clientObjectId
       });
 
-      if (!result.deletedCount === 0) {
+      if (result.deletedCount === 0) {
         return res.status(404).json({
           message: 'Klijent nije pronađen.'
         });
       }
 
-      res.status(200).json({
-        message: 'Klijent uspješno obrisan.'
+      await progressCollection.deleteMany({
+        clientId: clientObjectId
       });
+
+      await exercisesCollection.deleteMany({
+        clientId: clientObjectId
+      });
+
+      await caloriesCollection.deleteMany({
+        clientId: clientObjectId
+      });
+
+      res.status(200).json({
+        message: 'Klijent i svi njegovi podaci su uspješno obrisani.'
+      });
+
     } catch (error) {
       console.error(error);
 
