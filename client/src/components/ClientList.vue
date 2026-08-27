@@ -47,26 +47,33 @@ onMounted(() => {
     </h2>
 
     <div class="grid gap-4">
-        <article
+      <article
         v-for="client in clients"
         :key="client._id"
         class="rounded-lg bg-white p-4 shadow"
-        >
+      >
         <h3 class="text-lg font-bold">
-            {{ client.firstName }} {{ client.lastName }}
+          {{ client.firstName }} {{ client.lastName }}
         </h3>
 
         <p class="text-gray-600">
-            {{ client.email }}
+          {{ client.email }}
         </p>
 
-        <button
-            class="mt-4 rounded bg-red-600 px-4 py-2 text-white hover:bg-red-700"
-            @click="deleteClient(client._id)"
+        <RouterLink
+          :to="`/clients/${client._id}`"
+          class="mt-4 inline-block rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
         >
-            Obriši
+          Detalji
+        </RouterLink>
+
+        <button
+          class="ml-2 mt-4 rounded bg-red-600 px-4 py-2 text-white hover:bg-red-700"
+          @click="deleteClient(client._id)"
+        >
+          Obriši
         </button>
-        </article>
+      </article>
     </div>
   </section>
 </template>
