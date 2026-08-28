@@ -1,12 +1,15 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
+
 import ProgressForm from '../components/ProgressForm.vue'
+import ExerciseForm from '../components/ExerciseForm.vue'
 
 const route = useRoute()
 
 const client = ref(null)
 const progress = ref([])
+const exercises = ref([])
 
 const loading = ref(true)
 const errorMessage = ref('')
@@ -53,9 +56,31 @@ async function getProgress() {
   }
 }
 
+  async function getExercises() {
+    try {
+      const response = await fetch(
+        `http://localhost:3000/exercises/${route.params.id}`
+      )
+
+      if (!response.ok) {
+        console.error('Greška prilikom dohvaćanja vježbi.')
+        return
+      }
+
+      exercises.value = await response.json()
+
+    } catch (error) {
+      console.error(
+        'Greška prilikom povezivanja sa serverom:',
+        error
+      )
+    }
+  }
+
 onMounted(() => {
   getClient()
   getProgress()
+  getExercises()
 })
 </script>
 
@@ -117,6 +142,7 @@ onMounted(() => {
         :clientId="route.params.id"
         @progress-added="getProgress"
       />
+
       <!-- napredak klijenta -->
       <section
         v-if="client"
@@ -165,6 +191,70 @@ onMounted(() => {
             <p v-if="entry.notes">
               <strong>Bilješka:</strong>
               {{ entry.notes }}
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <!-- forma za dodavanje vježbe -->
+      <ExerciseForm
+        v-if="client"
+        :clientId="route.params.id"
+        @exercise-added="getExercises"
+      />
+
+      <!-- vježbe klijenta -->
+      <section
+        v-if="client"
+        class="mt-8 rounded-lg bg-white p-6 shadow"
+      >
+        <h2 class="mb-4 text-2xl font-bold">
+          Vježbe
+        </h2>
+
+        <p
+          v-if="exercises.length === 0"
+          class="text-gray-500"
+        >
+          Klijent još nema zapisanih vježbi.
+        </p>
+
+        <div
+          v-else
+          class="grid gap-4"
+        >
+          <article
+            v-for="exercise in exercises"
+            :key="exercise._id"
+            class="rounded border border-gray-200 p-4"
+          >
+            <h3 class="text-lg font-bold">
+              {{ exercise.exerciseName }}
+            </h3>
+
+            <p>
+              <strong>Datum:</strong>
+              {{ new Date(exercise.date).toLocaleDateString() }}
+            </p>
+
+            <p>
+              <strong>Serije:</strong>
+              {{ exercise.sets }}
+            </p>
+
+            <p>
+              <strong>Ponavljanja:</strong>
+              {{ exercise.reps }}
+            </p>
+
+            <p v-if="exercise.weight !== undefined">
+              <strong>Težina:</strong>
+              {{ exercise.weight }} kg
+            </p>
+
+            <p v-if="exercise.notes">
+              <strong>Bilješka:</strong>
+              {{ exercise.notes }}
             </p>
           </article>
         </div>
