@@ -1,6 +1,6 @@
 <script setup>
 import { ref } from 'vue'
-import { addProgress } from '../services/progressService.js'
+import { addCalories } from '../services/caloriesService.js'
 
 const props = defineProps({
   clientId: {
@@ -10,54 +10,48 @@ const props = defineProps({
 })
 
 const emit = defineEmits([
-  'progress-added'
+  'calories-added'
 ])
 
 const date = ref('')
-const weight = ref('')
-const waist = ref('')
-const bodyFat = ref('')
+const calorieTarget = ref('')
+const caloriesConsumed = ref('')
 const notes = ref('')
 
 const message = ref('')
 const errorMessage = ref('')
 
 
-async function submitProgress() {
+async function submitCalories() {
   message.value = ''
   errorMessage.value = ''
 
-  const progressData = {
+  const caloriesData = {
     date: date.value,
-    weight: Number(weight.value),
-    waist: waist.value
-      ? Number(waist.value)
-      : undefined,
-    bodyFat: bodyFat.value
-      ? Number(bodyFat.value)
-      : undefined,
+    calorieTarget: Number(calorieTarget.value),
+    caloriesConsumed: Number(caloriesConsumed.value),
     notes: notes.value
   }
 
   try {
-    await addProgress(
+    await addCalories(
       props.clientId,
-      progressData
+      caloriesData
     )
 
     message.value =
-      'Napredak je uspješno dodan.'
+      'Kalorijski zapis je uspješno dodan.'
 
-    emit('progress-added')
+    emit('calories-added')
 
     date.value = ''
-    weight.value = ''
-    waist.value = ''
-    bodyFat.value = ''
+    calorieTarget.value = ''
+    caloriesConsumed.value = ''
     notes.value = ''
 
   } catch (error) {
     console.error(error)
+
     errorMessage.value = error.message
   }
 }
@@ -66,12 +60,12 @@ async function submitProgress() {
 <template>
   <section class="mt-8 rounded-lg bg-white p-6 shadow">
     <h2 class="mb-4 text-2xl font-bold">
-      Dodaj napredak
+      Dodaj kalorijski zapis
     </h2>
 
     <form
       class="grid gap-4"
-      @submit.prevent="submitProgress"
+      @submit.prevent="submitCalories"
     >
       <input
         v-model="date"
@@ -80,26 +74,18 @@ async function submitProgress() {
       >
 
       <input
-        v-model="weight"
+        v-model="calorieTarget"
         type="number"
-        step="0.1"
-        placeholder="Težina (kg)"
+        min="1"
+        placeholder="Kalorijski cilj"
         class="rounded border border-gray-300 p-3"
       >
 
       <input
-        v-model="waist"
+        v-model="caloriesConsumed"
         type="number"
-        step="0.1"
-        placeholder="Struk (cm)"
-        class="rounded border border-gray-300 p-3"
-      >
-
-      <input
-        v-model="bodyFat"
-        type="number"
-        step="0.1"
-        placeholder="Body fat (%)"
+        min="0"
+        placeholder="Unesene kalorije"
         class="rounded border border-gray-300 p-3"
       >
 
@@ -113,7 +99,7 @@ async function submitProgress() {
         type="submit"
         class="rounded bg-blue-600 px-4 py-3 font-semibold text-white hover:bg-blue-700"
       >
-        Dodaj napredak
+        Dodaj kalorijski zapis
       </button>
     </form>
 

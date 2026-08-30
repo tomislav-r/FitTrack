@@ -1,5 +1,6 @@
 <script setup>
 import { ref } from 'vue'
+import { addExercise } from '../services/exerciseService.js'
 
 const props = defineProps({
   clientId: {
@@ -8,7 +9,9 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['exercise-added'])
+const emit = defineEmits([
+  'exercise-added'
+])
 
 const exerciseName = ref('')
 const date = ref('')
@@ -20,40 +23,30 @@ const notes = ref('')
 const message = ref('')
 const errorMessage = ref('')
 
-async function addExercise() {
+
+async function submitExercise() {
   message.value = ''
   errorMessage.value = ''
 
+  const exerciseData = {
+    exerciseName: exerciseName.value,
+    date: date.value,
+    sets: Number(sets.value),
+    reps: Number(reps.value),
+    weight: weight.value
+      ? Number(weight.value)
+      : undefined,
+    notes: notes.value
+  }
+
   try {
-    const response = await fetch(
-      `http://localhost:3000/exercises/${props.clientId}`,
-      {
-        method: 'POST',
-
-        headers: {
-          'Content-Type': 'application/json'
-        },
-
-        body: JSON.stringify({
-          exerciseName: exerciseName.value,
-          date: date.value,
-          sets: Number(sets.value),
-          reps: Number(reps.value),
-          weight: weight.value ? Number(weight.value) : undefined,
-          notes: notes.value
-        })
-      }
+    await addExercise(
+      props.clientId,
+      exerciseData
     )
 
-    const data = await response.json()
-
-    if (!response.ok) {
-      errorMessage.value = 'Podaci nisu ispravno uneseni.'
-      console.log(data)
-      return
-    }
-
-    message.value = 'Vježba je uspješno dodana.'
+    message.value =
+      'Vježba je uspješno dodana.'
 
     emit('exercise-added')
 
@@ -67,7 +60,7 @@ async function addExercise() {
   } catch (error) {
     console.error(error)
 
-    errorMessage.value = 'Greška prilikom povezivanja sa serverom.'
+    errorMessage.value = error.message
   }
 }
 </script>
@@ -80,7 +73,7 @@ async function addExercise() {
 
     <form
       class="grid gap-4"
-      @submit.prevent="addExercise"
+      @submit.prevent="submitExercise"
     >
       <input
         v-model="exerciseName"

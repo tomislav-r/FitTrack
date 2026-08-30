@@ -2,264 +2,262 @@
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 
+import ClientInfo from '../components/ClientInfo.vue'
 import ProgressForm from '../components/ProgressForm.vue'
+import ProgressList from '../components/ProgressList.vue'
 import ExerciseForm from '../components/ExerciseForm.vue'
+import ExerciseList from '../components/ExerciseList.vue'
+import CaloriesForm from '../components/CaloriesForm.vue'
+import CaloriesList from '../components/CaloriesList.vue'
+
+import { getClientById } from '../services/clientService.js'
+
+import {
+  getProgressByClient,
+  deleteProgressById
+} from '../services/progressService.js'
+
+import {
+  getExercisesByClient,
+  deleteExerciseById
+} from '../services/exerciseService.js'
+
+import {
+  getCaloriesByClient,
+  deleteCaloriesById
+} from '../services/caloriesService.js'
+
 
 const route = useRoute()
 
 const client = ref(null)
 const progress = ref([])
 const exercises = ref([])
+const calories = ref([])
 
 const loading = ref(true)
 const errorMessage = ref('')
+const selectedPeriod = ref('')
+
 
 async function getClient() {
   try {
-    const response = await fetch(
-      `http://localhost:3000/clients/${route.params.id}`
+    client.value = await getClientById(
+      route.params.id
     )
-
-    if (!response.ok) {
-      errorMessage.value = 'Klijent nije pronađen.'
-      return
-    }
-
-    client.value = await response.json()
 
   } catch (error) {
     console.error(error)
-    errorMessage.value = 'Greška prilikom povezivanja sa serverom.'
-  } finally {
-    loading.value = false
+    errorMessage.value = error.message
   }
 }
+
 
 async function getProgress() {
   try {
-    const response = await fetch(
-      `http://localhost:3000/progress/${route.params.id}`
+    progress.value = await getProgressByClient(
+      route.params.id,
+      selectedPeriod.value
     )
-
-    if (!response.ok) {
-      console.error('Greška prilikom dohvaćanja napretka.')
-      return
-    }
-
-    progress.value = await response.json()
 
   } catch (error) {
-    console.error(
-      'Greška prilikom povezivanja sa serverom:',
-      error
-    )
+    console.error(error)
   }
 }
 
-  async function getExercises() {
-    try {
-      const response = await fetch(
-        `http://localhost:3000/exercises/${route.params.id}`
-      )
 
-      if (!response.ok) {
-        console.error('Greška prilikom dohvaćanja vježbi.')
-        return
-      }
+async function getExercises() {
+  try {
+    exercises.value = await getExercisesByClient(
+      route.params.id
+    )
 
-      exercises.value = await response.json()
+  } catch (error) {
+    console.error(error)
+  }
+}
 
-    } catch (error) {
-      console.error(
-        'Greška prilikom povezivanja sa serverom:',
-        error
-      )
-    }
+
+async function getCalories() {
+  try {
+    calories.value = await getCaloriesByClient(
+      route.params.id
+    )
+
+  } catch (error) {
+    console.error(error)
+  }
+}
+
+
+async function changePeriod(period) {
+  selectedPeriod.value = period
+
+  await getProgress()
+}
+
+
+async function deleteProgress(id) {
+  const confirmed = confirm(
+    'Želiš li obrisati ovaj zapis napretka?'
+  )
+
+  if (!confirmed) {
+    return
   }
 
+  try {
+    await deleteProgressById(id)
+
+    await getProgress()
+
+  } catch (error) {
+    console.error(error)
+  }
+}
+
+
+async function deleteExercise(id) {
+  const confirmed = confirm(
+    'Želiš li obrisati ovu vježbu?'
+  )
+
+  if (!confirmed) {
+    return
+  }
+
+  try {
+    await deleteExerciseById(id)
+
+    await getExercises()
+
+  } catch (error) {
+    console.error(error)
+  }
+}
+
+
+async function deleteCalories(id) {
+  const confirmed = confirm(
+    'Želiš li obrisati ovaj kalorijski zapis?'
+  )
+
+  if (!confirmed) {
+    return
+  }
+
+  try {
+    await deleteCaloriesById(id)
+
+    await getCalories()
+
+  } catch (error) {
+    console.error(error)
+  }
+}
+
+
+async function loadClientData() {
+  loading.value = true
+  errorMessage.value = ''
+
+  await Promise.all([
+    getClient(),
+    getProgress(),
+    getExercises(),
+    getCalories()
+  ])
+
+  loading.value = false
+}
+
+
 onMounted(() => {
-  getClient()
-  getProgress()
-  getExercises()
+  loadClientData()
 })
 </script>
 
+
 <template>
-  <main class="min-h-screen bg-gray-100 p-8">
-    <div class="mx-auto max-w-4xl">
+  <main class="min-h-screen bg-gray-100 px-4 py-8">
+    <div class="mx-auto max-w-5xl">
 
       <RouterLink
         to="/"
-        class="mb-6 inline-block text-blue-600 hover:underline"
+        class="mb-6 inline-block font-medium text-blue-600 hover:underline"
       >
         ← Natrag na klijente
       </RouterLink>
 
-      <p v-if="loading">
+
+      <p
+        v-if="loading"
+        class="text-gray-600"
+      >
         Učitavanje...
       </p>
 
+
       <p
         v-else-if="errorMessage"
-        class="text-red-600"
+        class="rounded-lg bg-red-100 p-4 text-red-700"
       >
         {{ errorMessage }}
       </p>
 
-      <section
-        v-else-if="client"
-        class="rounded-lg bg-white p-6 shadow"
-      >
-        <h1 class="text-3xl font-bold">
-          {{ client.firstName }} {{ client.lastName }}
-        </h1>
 
-        <div class="mt-6 grid gap-3">
-          <p>
-            <strong>Email:</strong>
-            {{ client.email }}
-          </p>
+      <div v-else-if="client">
 
-          <p>
-            <strong>Visina:</strong>
-            {{ client.height || 'Nije unesena' }}
-          </p>
+        <!-- PODACI KLIJENTA -->
+        <ClientInfo
+          :client="client"
+        />
 
-          <p>
-            <strong>Ciljana težina:</strong>
-            {{ client.targetWeight || 'Nije unesena' }}
-          </p>
 
-          <p>
-            <strong>Cilj:</strong>
-            {{ client.goal || 'Nije unesen' }}
-          </p>
-        </div>
-      </section>
+        <!-- DODAVANJE NAPRETKA -->
+        <ProgressForm
+          :client-id="route.params.id"
+          @progress-added="getProgress"
+        />
 
-      <ProgressForm
-        v-if="client"
-        :clientId="route.params.id"
-        @progress-added="getProgress"
-      />
 
-      <!-- napredak klijenta -->
-      <section
-        v-if="client"
-        class="mt-8 rounded-lg bg-white p-6 shadow"
-      >
-        <h2 class="mb-4 text-2xl font-bold">
-          Napredak
-        </h2>
+        <!-- PRIKAZ NAPRETKA -->
+        <ProgressList
+          :progress="progress"
+          :selected-period="selectedPeriod"
+          @period-changed="changePeriod"
+          @progress-deleted="deleteProgress"
+        />
 
-        <p
-          v-if="progress.length === 0"
-          class="text-gray-500"
-        >
-          Klijent još nema zapisa napretka.
-        </p>
 
-        <div
-          v-else
-          class="grid gap-4"
-        >
-          <article
-            v-for="entry in progress"
-            :key="entry._id"
-            class="rounded border border-gray-200 p-4"
-          >
-            <p>
-              <strong>Datum:</strong>
-              {{ new Date(entry.date).toLocaleDateString() }}
-            </p>
+        <!-- DODAVANJE VJEŽBE -->
+        <ExerciseForm
+          :client-id="route.params.id"
+          @exercise-added="getExercises"
+        />
 
-            <p>
-              <strong>Težina:</strong>
-              {{ entry.weight }} kg
-            </p>
 
-            <p v-if="entry.waist">
-              <strong>Struk:</strong>
-              {{ entry.waist }} cm
-            </p>
+        <!-- PRIKAZ VJEŽBI -->
+        <ExerciseList
+          :exercises="exercises"
+          @exercise-deleted="deleteExercise"
+        />
 
-            <p v-if="entry.bodyFat">
-              <strong>Body fat:</strong>
-              {{ entry.bodyFat }}%
-            </p>
 
-            <p v-if="entry.notes">
-              <strong>Bilješka:</strong>
-              {{ entry.notes }}
-            </p>
-          </article>
-        </div>
-      </section>
+        <!-- DODAVANJE KALORIJSKOG ZAPISA -->
+        <CaloriesForm
+          :client-id="route.params.id"
+          @calories-added="getCalories"
+        />
 
-      <!-- forma za dodavanje vježbe -->
-      <ExerciseForm
-        v-if="client"
-        :clientId="route.params.id"
-        @exercise-added="getExercises"
-      />
 
-      <!-- vježbe klijenta -->
-      <section
-        v-if="client"
-        class="mt-8 rounded-lg bg-white p-6 shadow"
-      >
-        <h2 class="mb-4 text-2xl font-bold">
-          Vježbe
-        </h2>
+        <!-- PRIKAZ KALORIJSKIH ZAPISA -->
+        <CaloriesList
+          :calories="calories"
+          @calories-deleted="deleteCalories"
+        />
 
-        <p
-          v-if="exercises.length === 0"
-          class="text-gray-500"
-        >
-          Klijent još nema zapisanih vježbi.
-        </p>
-
-        <div
-          v-else
-          class="grid gap-4"
-        >
-          <article
-            v-for="exercise in exercises"
-            :key="exercise._id"
-            class="rounded border border-gray-200 p-4"
-          >
-            <h3 class="text-lg font-bold">
-              {{ exercise.exerciseName }}
-            </h3>
-
-            <p>
-              <strong>Datum:</strong>
-              {{ new Date(exercise.date).toLocaleDateString() }}
-            </p>
-
-            <p>
-              <strong>Serije:</strong>
-              {{ exercise.sets }}
-            </p>
-
-            <p>
-              <strong>Ponavljanja:</strong>
-              {{ exercise.reps }}
-            </p>
-
-            <p v-if="exercise.weight !== undefined">
-              <strong>Težina:</strong>
-              {{ exercise.weight }} kg
-            </p>
-
-            <p v-if="exercise.notes">
-              <strong>Bilješka:</strong>
-              {{ exercise.notes }}
-            </p>
-          </article>
-        </div>
-      </section>
-
+      </div>
     </div>
   </main>
 </template>
