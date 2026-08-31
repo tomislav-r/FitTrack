@@ -9,6 +9,7 @@ import ExerciseForm from '../components/ExerciseForm.vue'
 import ExerciseList from '../components/ExerciseList.vue'
 import CaloriesForm from '../components/CaloriesForm.vue'
 import CaloriesList from '../components/CaloriesList.vue'
+import EditClientForm from '../components/EditClientForm.vue'
 
 import { getClientById } from '../services/clientService.js'
 
@@ -16,12 +17,10 @@ import {
   getProgressByClient,
   deleteProgressById
 } from '../services/progressService.js'
-
 import {
   getExercisesByClient,
   deleteExerciseById
 } from '../services/exerciseService.js'
-
 import {
   getCaloriesByClient,
   deleteCaloriesById
@@ -38,6 +37,7 @@ const calories = ref([])
 const loading = ref(true)
 const errorMessage = ref('')
 const selectedPeriod = ref('')
+const editingClient = ref(false)
 
 
 async function getClient() {
@@ -52,7 +52,6 @@ async function getClient() {
   }
 }
 
-
 async function getProgress() {
   try {
     progress.value = await getProgressByClient(
@@ -65,7 +64,6 @@ async function getProgress() {
   }
 }
 
-
 async function getExercises() {
   try {
     exercises.value = await getExercisesByClient(
@@ -76,7 +74,6 @@ async function getExercises() {
     console.error(error)
   }
 }
-
 
 async function getCalories() {
   try {
@@ -89,13 +86,11 @@ async function getCalories() {
   }
 }
 
-
 async function changePeriod(period) {
   selectedPeriod.value = period
 
   await getProgress()
 }
-
 
 async function deleteProgress(id) {
   const confirmed = confirm(
@@ -116,7 +111,6 @@ async function deleteProgress(id) {
   }
 }
 
-
 async function deleteExercise(id) {
   const confirmed = confirm(
     'Želiš li obrisati ovu vježbu?'
@@ -135,7 +129,6 @@ async function deleteExercise(id) {
     console.error(error)
   }
 }
-
 
 async function deleteCalories(id) {
   const confirmed = confirm(
@@ -156,7 +149,6 @@ async function deleteCalories(id) {
   }
 }
 
-
 async function loadClientData() {
   loading.value = true
   errorMessage.value = ''
@@ -171,12 +163,17 @@ async function loadClientData() {
   loading.value = false
 }
 
+async function handleClientUpdated() {
+  await getClient()
+
+  editingClient.value = false
+}
 
 onMounted(() => {
   loadClientData()
 })
-</script>
 
+</script>
 
 <template>
   <main class="min-h-screen bg-gray-100 px-4 py-8">
@@ -211,6 +208,14 @@ onMounted(() => {
         <!-- PODACI KLIJENTA -->
         <ClientInfo
           :client="client"
+          @edit-client="editingClient = true"
+        />
+
+        <EditClientForm
+          v-if="editingClient"
+          :client="client"
+          @client-updated="handleClientUpdated"
+          @cancel="editingClient = false"
         />
 
 

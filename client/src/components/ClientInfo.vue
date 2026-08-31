@@ -5,6 +5,10 @@ defineProps({
     required: true
   }
 })
+
+const emit = defineEmits([
+  'edit-client'
+])
 </script>
 
 <template>
@@ -64,5 +68,13 @@ defineProps({
         </p>
       </div>
     </div>
+
+    <button
+      class="mt-6 rounded bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-700"
+      @click="emit('edit-client')"
+    >
+      Uredi podatke
+    </button>
   </section>
+  
 </template>
