@@ -47,3 +47,28 @@ export async function deleteExerciseById(id) {
     throw new Error('Greška prilikom brisanja vježbe.')
   }
 }
+
+export async function updateExercise(id, exerciseData) {
+  const response = await fetch(
+    `http://localhost:3000/exercises/${id}`,
+    {
+      method: 'PATCH',
+
+      headers: {
+        'Content-Type': 'application/json'
+      },
+
+      body: JSON.stringify(exerciseData)
+    }
+  )
+
+  const data = await response.json()
+
+  if (!response.ok) {
+    throw new Error(
+      data.message || 'Greška prilikom uređivanja vježbe.'
+    )
+  }
+
+  return data
+}

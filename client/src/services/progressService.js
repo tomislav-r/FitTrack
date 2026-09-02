@@ -51,3 +51,28 @@ export async function deleteProgressById(id) {
     throw new Error('Greška prilikom brisanja napretka.')
   }
 }
+
+export async function updateProgress(id, progressData) {
+  const response = await fetch(
+    `http://localhost:3000/progress/${id}`,
+    {
+      method: 'PATCH',
+
+      headers: {
+        'Content-Type': 'application/json'
+      },
+
+      body: JSON.stringify(progressData)
+    }
+  )
+
+  const data = await response.json()
+
+  if (!response.ok) {
+    throw new Error(
+      data.message || 'Greška prilikom uređivanja napretka.'
+    )
+  }
+
+  return data
+}

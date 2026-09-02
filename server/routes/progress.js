@@ -195,6 +195,101 @@ router.post(
     }
   });
 
+  router.patch(
+  '/:id',
+  [
+    body('date')
+      .optional()
+      .isISO8601(),
+
+    body('weight')
+      .optional()
+      .isFloat({ gt: 0 }),
+
+    body('waist')
+      .optional({ nullable: true })
+      .isFloat({ gt: 0 }),
+
+    body('bodyFat')
+      .optional({ nullable: true })
+      .isFloat({ min: 0, max: 100 })
+  ],
+
+  async (req, res) => {
+    const id = req.params.id
+
+    const errors = validationResult(req)
+
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        errors: errors.array()
+      })
+    }
+
+    if (!ObjectId.isValid(id)) {
+      return res.status(400).json({
+        message: 'Neispravan ID zapisa napretka.'
+      })
+    }
+
+    try {
+      const updatedData = {}
+
+      if (req.body.date !== undefined) {
+        updatedData.date = new Date(req.body.date)
+      }
+
+      if (req.body.weight !== undefined) {
+        updatedData.weight = req.body.weight
+      }
+
+      if (req.body.waist !== undefined) {
+        updatedData.waist = req.body.waist
+      }
+
+      if (req.body.bodyFat !== undefined) {
+        updatedData.bodyFat = req.body.bodyFat
+      }
+
+      if (req.body.notes !== undefined) {
+        updatedData.notes = req.body.notes
+      }
+
+      if (Object.keys(updatedData).length === 0) {
+        return res.status(400).json({
+          message: 'Nema podataka za ažuriranje.'
+        })
+      }
+
+      const result = await progressCollection.updateOne(
+        {
+          _id: new ObjectId(id)
+        },
+        {
+          $set: updatedData
+        }
+      )
+
+      if (result.matchedCount === 0) {
+        return res.status(404).json({
+          message: 'Zapis napretka nije pronađen.'
+        })
+      }
+
+      res.status(200).json({
+        message: 'Napredak je uspješno ažuriran.'
+      })
+
+    } catch (error) {
+      console.error(error)
+
+      res.status(500).json({
+        message: 'Greška prilikom ažuriranja napretka.'
+      })
+    }
+  }
+)
+
   // Brisanje zapisa o napretku
 
   router.delete('/:id', async (req, res) => {

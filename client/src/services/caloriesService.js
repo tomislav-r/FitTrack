@@ -51,3 +51,29 @@ export async function deleteCaloriesById(id) {
     )
   }
 }
+
+export async function updateCalories(id, caloriesData) {
+  const response = await fetch(
+    `http://localhost:3000/calories/${id}`,
+    {
+      method: 'PATCH',
+
+      headers: {
+        'Content-Type': 'application/json'
+      },
+
+      body: JSON.stringify(caloriesData)
+    }
+  )
+
+  const data = await response.json()
+
+  if (!response.ok) {
+    throw new Error(
+      data.message ||
+      'Greška prilikom uređivanja kalorijskog zapisa.'
+    )
+  }
+
+  return data
+}

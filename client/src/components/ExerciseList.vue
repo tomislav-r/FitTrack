@@ -7,7 +7,8 @@ defineProps({
 })
 
 const emit = defineEmits([
-  'exercise-deleted'
+  'exercise-deleted',
+  'exercise-edit'
 ])
 </script>
 
@@ -69,6 +70,13 @@ const emit = defineEmits([
           >
             {{ exercise.notes }}
           </p>
+
+          <button
+            class="mt-4 mr-2 rounded bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+            @click="emit('exercise-edit', exercise)"
+          >
+            Uredi
+          </button>
 
           <button
             class="mt-4 rounded bg-red-600 px-3 py-2 text-sm font-semibold text-white hover:bg-red-700"

@@ -148,6 +148,110 @@ export default function createExerciseRouter(db) {
         }
     });
 
+    //Uređivanje postojećih zapisa
+    router.patch(
+    '/:id',
+    [
+        body('exerciseName')
+        .optional()
+        .notEmpty(),
+
+        body('date')
+        .optional()
+        .isISO8601(),
+
+        body('sets')
+        .optional()
+        .isInt({ gt: 0 }),
+
+        body('reps')
+        .optional()
+        .isInt({ gt: 0 }),
+
+        body('weight')
+        .optional({ nullable: true })
+        .isFloat({ min: 0 })
+    ],
+
+    async (req, res) => {
+        const id = req.params.id
+
+        const errors = validationResult(req)
+
+        if (!errors.isEmpty()) {
+        return res.status(400).json({
+            errors: errors.array()
+        })
+        }
+
+        if (!ObjectId.isValid(id)) {
+        return res.status(400).json({
+            message: 'Neispravan ID vježbe.'
+        })
+        }
+
+        try {
+        const updatedData = {}
+
+        if (req.body.exerciseName !== undefined) {
+            updatedData.exerciseName = req.body.exerciseName
+        }
+
+        if (req.body.date !== undefined) {
+            updatedData.date = new Date(req.body.date)
+        }
+
+        if (req.body.sets !== undefined) {
+            updatedData.sets = req.body.sets
+        }
+
+        if (req.body.reps !== undefined) {
+            updatedData.reps = req.body.reps
+        }
+
+        if (req.body.weight !== undefined) {
+            updatedData.weight = req.body.weight
+        }
+
+        if (req.body.notes !== undefined) {
+            updatedData.notes = req.body.notes
+        }
+
+        if (Object.keys(updatedData).length === 0) {
+            return res.status(400).json({
+            message: 'Nema podataka za ažuriranje.'
+            })
+        }
+
+        const result = await exerciseCollection.updateOne(
+            {
+                _id: new ObjectId(id)
+            },
+            {
+                $set: updatedData
+            }
+        )
+
+        if (result.matchedCount === 0) {
+            return res.status(404).json({
+            message: 'Vježba nije pronađena.'
+            })
+        }
+
+        res.status(200).json({
+            message: 'Vježba je uspješno ažurirana.'
+        })
+
+        } catch (error) {
+        console.error(error)
+
+        res.status(500).json({
+            message: 'Greška prilikom ažuriranja vježbe.'
+        })
+        }
+    }
+    )
+
     //Brisanje vježbi i rezultata vježbi za određenog klijenta
 
     router.delete('/:id', async (req, res) => {
