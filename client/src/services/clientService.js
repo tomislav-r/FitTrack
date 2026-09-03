@@ -1,18 +1,27 @@
+import { API_URL } from './api.js'
+
+
 export async function getClientById(id) {
   const response = await fetch(
-    `http://localhost:3000/clients/${id}`
+    `${API_URL}/clients/${id}`
   )
 
   if (!response.ok) {
-    throw new Error('Klijent nije pronađen.')
+    throw new Error(
+      'Klijent nije pronađen.'
+    )
   }
 
   return response.json()
 }
 
-export async function updateClient(id, clientData) {
+
+export async function updateClient(
+  id,
+  clientData
+) {
   const response = await fetch(
-    `http://localhost:3000/clients/${id}`,
+    `${API_URL}/clients/${id}`,
     {
       method: 'PATCH',
 
@@ -27,9 +36,10 @@ export async function updateClient(id, clientData) {
   const data = await response.json()
 
   if (!response.ok) {
-    throw new Error('Greška prilikom uređivanja klijenta.')
+    throw new Error(
+      'Greška prilikom uređivanja klijenta.'
+    )
   }
 
   return data
 }
-

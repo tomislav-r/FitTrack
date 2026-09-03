@@ -31,12 +31,15 @@ async function submitClientUpdate() {
     firstName: firstName.value,
     lastName: lastName.value,
     email: email.value,
+
     height: height.value === ''
       ? null
       : Number(height.value),
+
     targetWeight: targetWeight.value === ''
       ? null
       : Number(targetWeight.value),
+
     goal: goal.value
   }
 
@@ -55,87 +58,196 @@ async function submitClientUpdate() {
 }
 </script>
 
+
 <template>
-  <section class="mt-6 rounded-xl bg-white p-6 shadow">
-    <h2 class="mb-4 text-2xl font-bold text-gray-900">
-      Uredi podatke klijenta
-    </h2>
+  <section
+    class="mt-6 rounded-3xl border border-[#2b2d30] bg-[#191a1c] p-6"
+  >
+    <!-- HEADER -->
+    <div class="mb-6">
+      <p
+        class="text-xs font-semibold uppercase tracking-wider text-gray-500"
+      >
+        Profil klijenta
+      </p>
+
+      <h2 class="mt-1 text-xl font-bold text-white">
+        Uredi podatke
+      </h2>
+
+      <p class="mt-1 text-sm text-gray-500">
+        Promijeni osnovne podatke i cilj klijenta.
+      </p>
+    </div>
+
 
     <form
-      class="grid gap-4 sm:grid-cols-2"
+      class="space-y-5"
       @submit.prevent="submitClientUpdate"
     >
-      <input
-        v-model="firstName"
-        type="text"
-        placeholder="Ime"
-        class="rounded border border-gray-300 p-3"
-        required
-      >
 
-      <input
-        v-model="lastName"
-        type="text"
-        placeholder="Prezime"
-        class="rounded border border-gray-300 p-3"
-        required
-      >
+      <!-- IME I PREZIME -->
+      <div class="grid gap-4 sm:grid-cols-2">
 
-      <input
-        v-model="email"
-        type="email"
-        placeholder="Email"
-        class="rounded border border-gray-300 p-3"
-        required
-      >
+        <div>
+          <label
+            class="mb-2 block text-xs font-semibold uppercase tracking-wide text-gray-500"
+          >
+            Ime
+          </label>
 
-      <input
-        v-model="height"
-        type="number"
-        min="1"
-        step="0.1"
-        placeholder="Visina (cm)"
-        class="rounded border border-gray-300 p-3"
-      >
+          <input
+            v-model="firstName"
+            type="text"
+            required
+            placeholder="Ime"
+            class="w-full rounded-xl border border-[#35373a] bg-[#141516] px-4 py-3 text-white outline-none transition placeholder:text-gray-600 focus:border-[#5c74ff]"
+          >
+        </div>
 
-      <input
-        v-model="targetWeight"
-        type="number"
-        min="1"
-        step="0.1"
-        placeholder="Ciljana težina (kg)"
-        class="rounded border border-gray-300 p-3"
-      >
 
-      <textarea
-        v-model="goal"
-        placeholder="Cilj"
-        class="rounded border border-gray-300 p-3 sm:col-span-2"
-      ></textarea>
+        <div>
+          <label
+            class="mb-2 block text-xs font-semibold uppercase tracking-wide text-gray-500"
+          >
+            Prezime
+          </label>
 
-      <div class="flex gap-3 sm:col-span-2">
+          <input
+            v-model="lastName"
+            type="text"
+            required
+            placeholder="Prezime"
+            class="w-full rounded-xl border border-[#35373a] bg-[#141516] px-4 py-3 text-white outline-none transition placeholder:text-gray-600 focus:border-[#5c74ff]"
+          >
+        </div>
+
+      </div>
+
+
+      <!-- EMAIL -->
+      <div>
+        <label
+          class="mb-2 block text-xs font-semibold uppercase tracking-wide text-gray-500"
+        >
+          Email
+        </label>
+
+        <input
+          v-model="email"
+          type="email"
+          required
+          placeholder="ime@email.com"
+          class="w-full rounded-xl border border-[#35373a] bg-[#141516] px-4 py-3 text-white outline-none transition placeholder:text-gray-600 focus:border-[#5c74ff]"
+        >
+      </div>
+
+
+      <!-- VISINA + TEŽINA -->
+      <div class="grid gap-4 sm:grid-cols-2">
+
+        <div>
+          <label
+            class="mb-2 block text-xs font-semibold uppercase tracking-wide text-gray-500"
+          >
+            Visina
+          </label>
+
+          <div class="relative">
+            <input
+              v-model="height"
+              type="number"
+              min="1"
+              step="0.1"
+              placeholder="180"
+              class="w-full rounded-xl border border-[#35373a] bg-[#141516] px-4 py-3 pr-12 text-white outline-none transition placeholder:text-gray-600 focus:border-[#5c74ff]"
+            >
+
+            <span
+              class="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-gray-500"
+            >
+              cm
+            </span>
+          </div>
+        </div>
+
+
+        <div>
+          <label
+            class="mb-2 block text-xs font-semibold uppercase tracking-wide text-gray-500"
+          >
+            Ciljana težina
+          </label>
+
+          <div class="relative">
+            <input
+              v-model="targetWeight"
+              type="number"
+              min="1"
+              step="0.1"
+              placeholder="80"
+              class="w-full rounded-xl border border-[#35373a] bg-[#141516] px-4 py-3 pr-12 text-white outline-none transition placeholder:text-gray-600 focus:border-[#5c74ff]"
+            >
+
+            <span
+              class="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-gray-500"
+            >
+              kg
+            </span>
+          </div>
+        </div>
+
+      </div>
+
+
+      <!-- CILJ -->
+      <div>
+        <label
+          class="mb-2 block text-xs font-semibold uppercase tracking-wide text-gray-500"
+        >
+          Cilj
+        </label>
+
+        <textarea
+          v-model="goal"
+          rows="3"
+          placeholder="npr. Smanjiti tjelesnu težinu..."
+          class="w-full resize-none rounded-xl border border-[#35373a] bg-[#141516] px-4 py-3 text-white outline-none transition placeholder:text-gray-600 focus:border-[#5c74ff]"
+        ></textarea>
+      </div>
+
+
+      <!-- BUTTONI -->
+      <div class="grid gap-3 sm:grid-cols-2">
+
         <button
           type="submit"
-          class="rounded bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-700"
+          class="rounded-xl bg-[#5065e8] px-4 py-3 font-semibold text-white transition hover:bg-[#6074f0]"
         >
           Spremi promjene
         </button>
 
+
         <button
           type="button"
-          class="rounded bg-gray-200 px-4 py-2 font-semibold text-gray-700 hover:bg-gray-300"
+          class="rounded-xl border border-[#35373a] bg-[#242628] px-4 py-3 font-semibold text-gray-300 transition hover:bg-[#303236]"
           @click="emit('cancel')"
         >
           Odustani
         </button>
+
       </div>
+
     </form>
 
+
+    <!-- ERROR -->
     <p
       v-if="errorMessage"
-      class="mt-4 text-red-600"
+      class="mt-4 rounded-xl bg-red-950/40 px-4 py-3 text-sm font-medium text-red-400"
     >
       {{ errorMessage }}
     </p>
+
   </section>
 </template>

@@ -7,7 +7,7 @@ import createCaloriesRouter from './routes/calories.js';
 import cors from 'cors';
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json());
@@ -25,6 +25,6 @@ app.use('/progress', createProgressRouter(db));
 app.use('/exercises', createExerciseRouter(db));
 app.use('/calories', createCaloriesRouter(db));
 
-app.listen(PORT, () => {
-  console.log(`FitTrack server radi na http://localhost:${PORT}`);
-});
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Server radi na portu ${PORT}`)
+})

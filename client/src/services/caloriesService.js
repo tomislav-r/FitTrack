@@ -1,6 +1,9 @@
+import { API_URL } from './api.js'
+
+
 export async function getCaloriesByClient(clientId) {
   const response = await fetch(
-    `http://localhost:3000/calories/${clientId}`
+    `${API_URL}/calories/${clientId}`
   )
 
   if (!response.ok) {
@@ -13,9 +16,12 @@ export async function getCaloriesByClient(clientId) {
 }
 
 
-export async function addCalories(clientId, caloriesData) {
+export async function addCalories(
+  clientId,
+  caloriesData
+) {
   const response = await fetch(
-    `http://localhost:3000/calories/${clientId}`,
+    `${API_URL}/calories/${clientId}`,
     {
       method: 'POST',
 
@@ -30,7 +36,9 @@ export async function addCalories(clientId, caloriesData) {
   const data = await response.json()
 
   if (!response.ok) {
-    throw new Error('Podaci nisu ispravno uneseni.')
+    throw new Error(
+      'Podaci nisu ispravno uneseni.'
+    )
   }
 
   return data
@@ -39,7 +47,7 @@ export async function addCalories(clientId, caloriesData) {
 
 export async function deleteCaloriesById(id) {
   const response = await fetch(
-    `http://localhost:3000/calories/${id}`,
+    `${API_URL}/calories/${id}`,
     {
       method: 'DELETE'
     }
@@ -52,9 +60,13 @@ export async function deleteCaloriesById(id) {
   }
 }
 
-export async function updateCalories(id, caloriesData) {
+
+export async function updateCalories(
+  id,
+  caloriesData
+) {
   const response = await fetch(
-    `http://localhost:3000/calories/${id}`,
+    `${API_URL}/calories/${id}`,
     {
       method: 'PATCH',
 

@@ -21,6 +21,7 @@ import { getClientById } from '../services/clientService.js'
 
 import {
   getProgressByClient,
+  getProgressYears,
   deleteProgressById
 } from '../services/progressService.js'
 
@@ -38,7 +39,10 @@ import {
 const route = useRoute()
 
 const client = ref(null)
+
 const progress = ref([])
+const progressYears = ref([])
+
 const exercises = ref([])
 const calories = ref([])
 
@@ -46,6 +50,7 @@ const loading = ref(true)
 const errorMessage = ref('')
 
 const selectedPeriod = ref('')
+const selectedFilterValue = ref('')
 
 const activeSection = ref('progress')
 
@@ -60,6 +65,7 @@ async function getClient() {
     client.value = await getClientById(
       route.params.id
     )
+
   } catch (error) {
     console.error(error)
     errorMessage.value = error.message
@@ -71,8 +77,22 @@ async function getProgress() {
   try {
     progress.value = await getProgressByClient(
       route.params.id,
-      selectedPeriod.value
+      selectedPeriod.value,
+      selectedFilterValue.value
     )
+
+  } catch (error) {
+    console.error(error)
+  }
+}
+
+
+async function getAvailableProgressYears() {
+  try {
+    progressYears.value = await getProgressYears(
+      route.params.id
+    )
+
   } catch (error) {
     console.error(error)
   }
@@ -84,6 +104,7 @@ async function getExercises() {
     exercises.value = await getExercisesByClient(
       route.params.id
     )
+
   } catch (error) {
     console.error(error)
   }
@@ -95,14 +116,16 @@ async function getCalories() {
     calories.value = await getCaloriesByClient(
       route.params.id
     )
+
   } catch (error) {
     console.error(error)
   }
 }
 
 
-async function changePeriod(period) {
-  selectedPeriod.value = period
+async function changeProgressFilter(filter) {
+  selectedPeriod.value = filter.period
+  selectedFilterValue.value = filter.value
 
   await getProgress()
 }
@@ -130,6 +153,8 @@ async function deleteProgress(id) {
     await deleteProgressById(id)
 
     await getProgress()
+    await getAvailableProgressYears()
+
   } catch (error) {
     console.error(error)
   }
@@ -149,6 +174,7 @@ async function deleteExercise(id) {
     await deleteExerciseById(id)
 
     await getExercises()
+
   } catch (error) {
     console.error(error)
   }
@@ -168,6 +194,7 @@ async function deleteCalories(id) {
     await deleteCaloriesById(id)
 
     await getCalories()
+
   } catch (error) {
     console.error(error)
   }
@@ -181,8 +208,15 @@ async function handleClientUpdated() {
 }
 
 
+async function handleProgressAdded() {
+  await getProgress()
+  await getAvailableProgressYears()
+}
+
+
 async function handleProgressUpdated() {
   await getProgress()
+  await getAvailableProgressYears()
 
   editingProgress.value = null
 }
@@ -209,6 +243,7 @@ async function loadClientData() {
   await Promise.all([
     getClient(),
     getProgress(),
+    getAvailableProgressYears(),
     getExercises(),
     getCalories()
   ])
@@ -224,34 +259,40 @@ onMounted(() => {
 
 
 <template>
-  <main class="min-h-screen bg-gray-100 px-4 py-8">
+  <main class="min-h-screen bg-[#0f1011] px-4 py-8 text-white">
+
     <div class="mx-auto max-w-7xl">
 
       <!-- POVRATAK -->
       <RouterLink
         to="/"
-        class="mb-6 inline-block font-medium text-blue-600 hover:underline"
+        class="mb-6 inline-flex items-center gap-2 text-sm font-semibold text-gray-500 transition hover:text-white"
       >
-        ← Natrag na klijente
+        <span>←</span>
+        <span>Natrag na klijente</span>
       </RouterLink>
 
 
       <!-- LOADING -->
-      <p
+      <div
         v-if="loading"
-        class="text-gray-600"
+        class="rounded-2xl border border-[#2b2d30] bg-[#191a1c] p-6"
       >
-        Učitavanje...
-      </p>
+        <p class="text-sm font-medium text-gray-400">
+          Učitavanje podataka...
+        </p>
+      </div>
 
 
       <!-- ERROR -->
-      <p
+      <div
         v-else-if="errorMessage"
-        class="rounded-lg bg-red-100 p-4 text-red-700"
+        class="rounded-2xl border border-red-900/50 bg-red-950/40 p-5"
       >
-        {{ errorMessage }}
-      </p>
+        <p class="font-semibold text-red-400">
+          {{ errorMessage }}
+        </p>
+      </div>
 
 
       <div v-else-if="client">
@@ -273,60 +314,77 @@ onMounted(() => {
 
 
         <!-- TABOVI -->
-        <div
-          class="mt-8 flex flex-wrap gap-2 rounded-xl bg-white p-2 shadow"
-        >
-          <button
-            class="rounded-lg px-5 py-3 font-semibold transition"
-            :class="
-              activeSection === 'progress'
-                ? 'bg-blue-600 text-white'
-                : 'text-gray-600 hover:bg-gray-100'
-            "
-            @click="changeSection('progress')"
-          >
-            Napredak
-          </button>
+        <div class="mt-8">
 
-          <button
-            class="rounded-lg px-5 py-3 font-semibold transition"
-            :class="
-              activeSection === 'exercises'
-                ? 'bg-blue-600 text-white'
-                : 'text-gray-600 hover:bg-gray-100'
-            "
-            @click="changeSection('exercises')"
+          <div
+            class="inline-flex flex-wrap rounded-2xl border border-[#2b2d30] bg-[#191a1c] p-1.5"
           >
-            Vježbe
-          </button>
 
-          <button
-            class="rounded-lg px-5 py-3 font-semibold transition"
-            :class="
-              activeSection === 'calories'
-                ? 'bg-blue-600 text-white'
-                : 'text-gray-600 hover:bg-gray-100'
-            "
-            @click="changeSection('calories')"
-          >
-            Kalorije
-          </button>
+            <button
+              class="rounded-xl px-5 py-2.5 text-sm font-semibold transition"
+              :class="
+                activeSection === 'progress'
+                  ? 'bg-[#303236] text-white'
+                  : 'text-gray-500 hover:bg-[#242628] hover:text-gray-200'
+              "
+              @click="changeSection('progress')"
+            >
+              Napredak
+            </button>
+
+
+            <button
+              class="rounded-xl px-5 py-2.5 text-sm font-semibold transition"
+              :class="
+                activeSection === 'exercises'
+                  ? 'bg-[#303236] text-white'
+                  : 'text-gray-500 hover:bg-[#242628] hover:text-gray-200'
+              "
+              @click="changeSection('exercises')"
+            >
+              Vježbe
+            </button>
+
+
+            <button
+              class="rounded-xl px-5 py-2.5 text-sm font-semibold transition"
+              :class="
+                activeSection === 'calories'
+                  ? 'bg-[#303236] text-white'
+                  : 'text-gray-500 hover:bg-[#242628] hover:text-gray-200'
+              "
+              @click="changeSection('calories')"
+            >
+              Kalorije
+            </button>
+
+          </div>
+
         </div>
 
 
         <!-- NAPREDAK -->
         <section
           v-if="activeSection === 'progress'"
-          class="mt-6"
+          class="mt-8"
         >
-          <div class="mb-5">
-            <h2 class="text-2xl font-bold text-gray-900">
+
+          <div class="mb-6">
+
+            <p
+              class="mb-1 text-xs font-semibold uppercase tracking-wider text-gray-500"
+            >
+              Mjerenja
+            </p>
+
+            <h2 class="text-3xl font-bold tracking-tight text-white">
               Napredak
             </h2>
 
-            <p class="mt-1 text-gray-500">
+            <p class="mt-1 text-sm text-gray-400">
               Praćenje tjelesnih mjerenja klijenta.
             </p>
+
           </div>
 
 
@@ -334,13 +392,17 @@ onMounted(() => {
 
             <!-- LIJEVO -->
             <div>
+
               <ProgressList
                 :progress="progress"
+                :years="progressYears"
                 :selected-period="selectedPeriod"
-                @period-changed="changePeriod"
+                :selected-filter-value="selectedFilterValue"
+                @filter-changed="changeProgressFilter"
                 @progress-deleted="deleteProgress"
                 @progress-edit="editingProgress = $event"
               />
+
             </div>
 
 
@@ -354,31 +416,42 @@ onMounted(() => {
                 @cancel="editingProgress = null"
               />
 
+
               <ProgressForm
                 v-else
                 :client-id="route.params.id"
-                @progress-added="getProgress"
+                @progress-added="handleProgressAdded"
               />
 
             </div>
 
           </div>
+
         </section>
 
 
         <!-- VJEŽBE -->
         <section
           v-if="activeSection === 'exercises'"
-          class="mt-6"
+          class="mt-8"
         >
-          <div class="mb-5">
-            <h2 class="text-2xl font-bold text-gray-900">
+
+          <div class="mb-6">
+
+            <p
+              class="mb-1 text-xs font-semibold uppercase tracking-wider text-gray-500"
+            >
+              Trening
+            </p>
+
+            <h2 class="text-3xl font-bold tracking-tight text-white">
               Vježbe
             </h2>
 
-            <p class="mt-1 text-gray-500">
+            <p class="mt-1 text-sm text-gray-400">
               Evidencija treninga i rezultata klijenta.
             </p>
+
           </div>
 
 
@@ -386,11 +459,13 @@ onMounted(() => {
 
             <!-- LIJEVO -->
             <div>
+
               <ExerciseList
                 :exercises="exercises"
                 @exercise-deleted="deleteExercise"
                 @exercise-edit="editingExercise = $event"
               />
+
             </div>
 
 
@@ -404,6 +479,7 @@ onMounted(() => {
                 @cancel="editingExercise = null"
               />
 
+
               <ExerciseForm
                 v-else
                 :client-id="route.params.id"
@@ -413,22 +489,32 @@ onMounted(() => {
             </div>
 
           </div>
+
         </section>
 
 
         <!-- KALORIJE -->
         <section
           v-if="activeSection === 'calories'"
-          class="mt-6"
+          class="mt-8"
         >
-          <div class="mb-5">
-            <h2 class="text-2xl font-bold text-gray-900">
+
+          <div class="mb-6">
+
+            <p
+              class="mb-1 text-xs font-semibold uppercase tracking-wider text-gray-500"
+            >
+              Prehrana
+            </p>
+
+            <h2 class="text-3xl font-bold tracking-tight text-white">
               Kalorije
             </h2>
 
-            <p class="mt-1 text-gray-500">
+            <p class="mt-1 text-sm text-gray-400">
               Praćenje kalorijskog cilja i dnevnog unosa.
             </p>
+
           </div>
 
 
@@ -436,11 +522,13 @@ onMounted(() => {
 
             <!-- LIJEVO -->
             <div>
+
               <CaloriesList
                 :calories="calories"
                 @calories-deleted="deleteCalories"
                 @calories-edit="editingCalories = $event"
               />
+
             </div>
 
 
@@ -454,6 +542,7 @@ onMounted(() => {
                 @cancel="editingCalories = null"
               />
 
+
               <CaloriesForm
                 v-else
                 :client-id="route.params.id"
@@ -463,9 +552,12 @@ onMounted(() => {
             </div>
 
           </div>
+
         </section>
 
       </div>
+
     </div>
+
   </main>
 </template>

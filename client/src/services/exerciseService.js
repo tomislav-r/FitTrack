@@ -1,19 +1,27 @@
+import { API_URL } from './api.js'
+
+
 export async function getExercisesByClient(clientId) {
   const response = await fetch(
-    `http://localhost:3000/exercises/${clientId}`
+    `${API_URL}/exercises/${clientId}`
   )
 
   if (!response.ok) {
-    throw new Error('Greška prilikom dohvaćanja vježbi.')
+    throw new Error(
+      'Greška prilikom dohvaćanja vježbi.'
+    )
   }
 
   return response.json()
 }
 
 
-export async function addExercise(clientId, exerciseData) {
+export async function addExercise(
+  clientId,
+  exerciseData
+) {
   const response = await fetch(
-    `http://localhost:3000/exercises/${clientId}`,
+    `${API_URL}/exercises/${clientId}`,
     {
       method: 'POST',
 
@@ -28,7 +36,9 @@ export async function addExercise(clientId, exerciseData) {
   const data = await response.json()
 
   if (!response.ok) {
-    throw new Error('Podaci nisu ispravno uneseni.')
+    throw new Error(
+      'Podaci nisu ispravno uneseni.'
+    )
   }
 
   return data
@@ -37,20 +47,26 @@ export async function addExercise(clientId, exerciseData) {
 
 export async function deleteExerciseById(id) {
   const response = await fetch(
-    `http://localhost:3000/exercises/${id}`,
+    `${API_URL}/exercises/${id}`,
     {
       method: 'DELETE'
     }
   )
 
   if (!response.ok) {
-    throw new Error('Greška prilikom brisanja vježbe.')
+    throw new Error(
+      'Greška prilikom brisanja vježbe.'
+    )
   }
 }
 
-export async function updateExercise(id, exerciseData) {
+
+export async function updateExercise(
+  id,
+  exerciseData
+) {
   const response = await fetch(
-    `http://localhost:3000/exercises/${id}`,
+    `${API_URL}/exercises/${id}`,
     {
       method: 'PATCH',
 
@@ -66,7 +82,8 @@ export async function updateExercise(id, exerciseData) {
 
   if (!response.ok) {
     throw new Error(
-      data.message || 'Greška prilikom uređivanja vježbe.'
+      data.message ||
+      'Greška prilikom uređivanja vježbe.'
     )
   }
 
