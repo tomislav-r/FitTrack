@@ -12,7 +12,7 @@ function refreshClients() {
 </script>
 
 <template>
-  <main class="min-h-screen bg-[#0f1011] px-4 py-8 text-white">
+  <main class="min-h-dvh bg-[#0b0f17] px-4 py-8 text-white">
     <div class="mx-auto max-w-7xl">
 
       <!-- HEADER -->
